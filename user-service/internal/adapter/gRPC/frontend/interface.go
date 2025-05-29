@@ -5,7 +5,7 @@ import (
 	"github.com/AskatNa/FoodStore/user-service/internal/model"
 )
 
-type CustomerUsecase interface {
+type CustomerUseCase interface {
 	Register(ctx context.Context, request model.Customer) (uint64, error)
 	Update(ctx context.Context, token string, request model.Customer) (model.Customer, error)
 	Get(ctx context.Context, token string, id uint64) (model.Customer, error)

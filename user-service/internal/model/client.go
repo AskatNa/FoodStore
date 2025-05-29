@@ -37,6 +37,5 @@ type CustomerUpdateData struct {
 	Email        *string
 	PasswordHash *string
 	UpdatedAt    *time.Time
-
-	IsDeleted *bool
+	IsDeleted    *bool
 }

@@ -5,7 +5,6 @@ import (
 	"fmt"
 	"github.com/AskatNa/FoodStore/user-service/internal/adapter/gRPC/frontend/dto"
 	"github.com/AskatNa/FoodStore/user-service/pkg/security"
-
 	"google.golang.org/grpc/codes"
 	"google.golang.org/grpc/status"
 
@@ -14,12 +13,13 @@ import (
 
 type Customer struct {
 	svc.UnimplementedCustomerServiceServer
-	customerUsecase CustomerUsecase
+
+	customerUseCase CustomerUseCase
 }
 
-func NewCustomer(uc CustomerUsecase) *Customer {
+func NewCustomer(uc CustomerUseCase) *Customer {
 	return &Customer{
-		customerUsecase: uc,
+		customerUseCase: uc,
 	}
 }
 
@@ -31,7 +31,7 @@ func (c *Customer) Register(ctx context.Context, req *svc.RegisterRequest) (*svc
 		return nil, status.Error(codes.InvalidArgument, err.Error())
 	}
 
-	id, err := c.customerUsecase.Register(ctx, customer)
+	id, err := c.customerUseCase.Register(ctx, customer)
 	if err != nil {
 		return nil, dto.FromError(err)
 	}
@@ -52,7 +52,7 @@ func (c *Customer) Update(ctx context.Context, req *svc.UpdateRequest) (*svc.Upd
 		return nil, status.Error(codes.Unauthenticated, "unauthenticated")
 	}
 
-	newClient, err := c.customerUsecase.Update(ctx, token, client)
+	newClient, err := c.customerUseCase.Update(ctx, token, client)
 	if err != nil {
 		return nil, status.Error(codes.Internal, err.Error())
 	}
@@ -72,7 +72,7 @@ func (c *Customer) Get(ctx context.Context, req *svc.GetRequest) (*svc.GetRespon
 		return nil, status.Error(codes.Unauthenticated, "unauthenticated")
 	}
 
-	client, err := c.customerUsecase.Get(ctx, token, req.Id)
+	client, err := c.customerUseCase.Get(ctx, token, req.Id)
 	if err != nil {
 		return nil, status.Error(codes.Internal, err.Error())
 	}
@@ -87,7 +87,7 @@ func (c *Customer) Login(ctx context.Context, req *svc.LoginRequest) (*svc.Login
 		return nil, status.Error(codes.InvalidArgument, "email or password not provided")
 	}
 
-	token, err := c.customerUsecase.Login(ctx, req.Email, req.Password)
+	token, err := c.customerUseCase.Login(ctx, req.Email, req.Password)
 	if err != nil {
 		return nil, status.Error(codes.Internal, err.Error())
 	}
@@ -105,7 +105,7 @@ func (c *Customer) RefreshToken(
 		return nil, status.Error(codes.InvalidArgument, "invalid refresh token")
 	}
 
-	token, err := c.customerUsecase.RefreshToken(ctx, req.RefreshToken)
+	token, err := c.customerUseCase.RefreshToken(ctx, req.RefreshToken)
 	if err != nil {
 		return nil, status.Error(codes.Internal, err.Error())
 	}

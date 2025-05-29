@@ -147,8 +147,19 @@ func (uc *Customer) Get(ctx context.Context, token string, id uint64) (model.Cus
 }
 
 func (uc *Customer) Delete(ctx context.Context, id uint64) error {
-	//TODO implement me
-	panic("implement me")
+	if id <= 0 {
+		return model.ErrInvalidID
+	}
+
+	err := uc.repo.Update(ctx, model.CustomerFilter{ID: &id}, model.CustomerUpdateData{
+		IsDeleted: def.Pointer(true),
+		UpdatedAt: def.Pointer(time.Now().UTC()),
+	})
+	if err != nil {
+		return fmt.Errorf("uc.repo.Update: %w", err)
+	}
+
+	return nil
 }
 
 func (uc *Customer) Login(ctx context.Context, email, password string) (model.Token, error) {

@@ -5,6 +5,8 @@ import (
 	"errors"
 	"github.com/AskatNa/FoodStore/user-service/internal/model"
 	"github.com/AskatNa/FoodStore/user-service/internal/usecase"
+	"github.com/AskatNa/FoodStore/user-service/internal/usecase/mocks"
+	"github.com/AskatNa/FoodStore/user-service/pkg/security"
 	"github.com/stretchr/testify/mock"
 	"github.com/stretchr/testify/require"
 	"testing"

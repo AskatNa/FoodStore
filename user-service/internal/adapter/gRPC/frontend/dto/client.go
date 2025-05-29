@@ -25,14 +25,14 @@ func ToCustomerFromUpdateRequest(req *svc.UpdateRequest) (model.Customer, error)
 	}, nil
 }
 
-func FromCustomer(client model.Customer) *base.Client {
-	return &base.Client{
+func FromCustomer(client model.Customer) *base.Customer {
+	return &base.Customer{
 		Id:        client.ID,
 		Name:      client.Name,
 		Email:     client.Email,
 		Phone:     client.Phone,
 		CreatedAt: timestamppb.New(client.CreatedAt),
-		//UpdatedAt: timestamppb.New(client.UpdatedAt),
+		UpdatedAt: timestamppb.New(client.UpdatedAt),
 		IsDeleted: client.IsDeleted,
 	}
 }

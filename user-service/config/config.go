@@ -1,10 +1,10 @@
 package config
 
 import (
-	"time"
-	"user-service/pkg/mongo"
-
+	"github.com/AskatNa/FoodStore/user-service/pkg/mongo"
 	"github.com/caarlos0/env/v10"
+	"github.com/joho/godotenv"
+	"time"
 )
 
 type (
@@ -58,8 +58,10 @@ type (
 )
 
 func New() (*Config, error) {
+	// Load .env file
+	_ = godotenv.Load()
+
 	var cfg Config
 	err := env.Parse(&cfg)
-
 	return &cfg, err
 }

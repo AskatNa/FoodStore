@@ -3,6 +3,7 @@ package app
 import (
 	"context"
 	"fmt"
+	server "github.com/AskatNa/FoodStore/user-service/internal/adapter/gRPC"
 	producer "github.com/AskatNa/FoodStore/user-service/internal/adapter/nats"
 	"github.com/AskatNa/FoodStore/user-service/pkg/security"
 	"log"
@@ -12,7 +13,6 @@ import (
 	"syscall"
 
 	"github.com/AskatNa/FoodStore/user-service/config"
-	grpcserver "github.com/AskatNa/FoodStore/user-service/internal/adapter/grpc/server"
 	mongorepo "github.com/AskatNa/FoodStore/user-service/internal/adapter/mongo"
 	"github.com/AskatNa/FoodStore/user-service/internal/usecase"
 	mongocon "github.com/AskatNa/FoodStore/user-service/pkg/mongo"
@@ -23,7 +23,7 @@ import (
 const serviceName = "user-service"
 
 type App struct {
-	grpcServer *grpcserver.API
+	grpcServer *server.API
 }
 
 func New(ctx context.Context, cfg *config.Config) (*App, error) {
@@ -71,7 +71,7 @@ func New(ctx context.Context, cfg *config.Config) (*App, error) {
 	)
 
 	// gRPC server
-	gRPCServer := grpcserver.New(
+	gRPCServer := server.New(
 		cfg.Server.GRPCServer,
 		customerUsecase,
 	)

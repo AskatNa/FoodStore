@@ -19,17 +19,17 @@ type API struct {
 	s               *grpc.Server
 	cfg             config.GRPCServer
 	addr            string
-	customerUsecase CustomerUsecase
+	customerUsecase CustomerUseCase
 }
 
 func New(
 	cfg config.GRPCServer,
-	customerUsecase CustomerUsecase,
+	customerUseCase CustomerUseCase,
 ) *API {
 	return &API{
 		cfg:             cfg,
 		addr:            fmt.Sprintf("0.0.0.0:%d", cfg.Port),
-		customerUsecase: customerUsecase,
+		customerUsecase: customerUseCase,
 	}
 }
 
