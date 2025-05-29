@@ -2,6 +2,7 @@ package usecase
 
 import (
 	"context"
+	"errors"
 	"fmt"
 	"github.com/AskatNa/FoodStore/user-service/internal/model"
 	"github.com/AskatNa/FoodStore/user-service/pkg/def"
@@ -42,39 +43,46 @@ func NewCustomer(
 }
 
 func (uc *Customer) Register(ctx context.Context, request model.Customer) (uint64, error) {
-	txFn := func(ctx context.Context) error {
-		id, err := uc.ai.Next(ctx, model.CustomerAi)
+	log.Printf("Starting registration for email: %s", request.Email)
 
-		if err != nil {
-			return err
-		}
-		request.ID = id
-
-		request.PasswordHash, err = uc.passwordManager.HashPassword(request.NewPassword)
-		if err != nil {
-			return fmt.Errorf("uc.passwordManager.HashPassword")
-		}
-
-		request.CreatedAt = time.Now().UTC()
-		request.UpdatedAt = time.Now().UTC()
-		err = uc.repo.Create(ctx, request)
-		if err != nil {
-			return err
-		}
-
-		err = uc.producer.Push(ctx, request)
-		if err != nil {
-			log.Println("uc.producer.Push: %w", err)
-		}
-
-		return nil
-	}
-
-	err := uc.callTx(ctx, txFn)
+	// Generate ID
+	id, err := uc.ai.Next(ctx, model.CustomerAi)
 	if err != nil {
-		return 0, fmt.Errorf("uc.callTx: %w", err)
+		log.Printf("Error getting next ID: %v", err)
+		return 0, fmt.Errorf("ai.Next: %w", err)
+	}
+	log.Printf("Generated ID: %d", id)
+	request.ID = id
+
+	// Hash password
+	request.PasswordHash, err = uc.passwordManager.HashPassword(request.NewPassword)
+	if err != nil {
+		log.Printf("Error hashing password: %v", err)
+		return 0, fmt.Errorf("passwordManager.HashPassword: %w", err)
+	}
+	log.Printf("Password hashed successfully")
+
+	// Set timestamps
+	request.CreatedAt = time.Now().UTC()
+	request.UpdatedAt = time.Now().UTC()
+
+	// Create customer
+	log.Printf("Attempting to create customer in database")
+	err = uc.repo.Create(ctx, request)
+	if err != nil {
+		log.Printf("Error creating customer: %v", err)
+		return 0, fmt.Errorf("repo.Create: %w", err)
+	}
+	log.Printf("Customer created successfully")
+
+	// Push event (non-critical operation)
+	log.Printf("Attempting to push customer event")
+	if err := uc.producer.Push(ctx, request); err != nil {
+		log.Printf("Warning: Error pushing customer event: %v", err)
+		// Don't return error here as this is non-critical
 	}
 
+	log.Printf("Registration completed successfully with ID: %d", request.ID)
 	return request.ID, nil
 }
 
@@ -96,23 +104,38 @@ func (uc *Customer) Update(ctx context.Context, token string, request model.Cust
 		return model.Customer{}, err
 	}
 
-	err = uc.passwordManager.CheckPassword(dbCustomer.PasswordHash, request.CurrentPassword)
-	if err != nil {
-		return model.Customer{}, fmt.Errorf("uc.passwordManager.CheckPassword: %w", err)
+	// Only verify password if a new password is being set
+	if request.NewPassword != "" {
+		if request.CurrentPassword == "" {
+			return model.Customer{}, fmt.Errorf("current password is required when updating password")
+		}
+		err = uc.passwordManager.CheckPassword(dbCustomer.PasswordHash, request.CurrentPassword)
+		if err != nil {
+			return model.Customer{}, fmt.Errorf("uc.passwordManager.CheckPassword: %w", err)
+		}
+		request.PasswordHash, err = uc.passwordManager.HashPassword(request.NewPassword)
+		if err != nil {
+			return model.Customer{}, fmt.Errorf("uc.passwordManager.HashPassword: %w", err)
+		}
 	}
 
-	request.PasswordHash, err = uc.passwordManager.HashPassword(request.NewPassword)
-	if err != nil {
-		return model.Customer{}, fmt.Errorf("uc.passwordManager.HashPassword: %w", err)
-	}
-
+	// Build update data with only provided fields
 	updateData := model.CustomerUpdateData{
-		ID:           def.Pointer(request.ID),
-		Name:         def.Pointer(request.Name),
-		Phone:        def.Pointer(request.Phone),
-		Email:        def.Pointer(request.Email),
-		PasswordHash: def.Pointer(request.PasswordHash),
-		UpdatedAt:    def.Pointer(request.UpdatedAt),
+		ID:        def.Pointer(request.ID),
+		UpdatedAt: def.Pointer(time.Now().UTC()),
+	}
+
+	if request.Name != "" {
+		updateData.Name = def.Pointer(request.Name)
+	}
+	if request.Phone != "" {
+		updateData.Phone = def.Pointer(request.Phone)
+	}
+	if request.Email != "" {
+		updateData.Email = def.Pointer(request.Email)
+	}
+	if request.PasswordHash != "" {
+		updateData.PasswordHash = def.Pointer(request.PasswordHash)
 	}
 
 	err = uc.repo.Update(ctx, model.CustomerFilter{ID: &request.ID}, updateData)
@@ -120,12 +143,18 @@ func (uc *Customer) Update(ctx context.Context, token string, request model.Cust
 		return model.Customer{}, err
 	}
 
-	err = uc.producer.Push(ctx, request)
+	// Get updated customer data
+	updatedCustomer, err := uc.Get(ctx, token, request.ID)
+	if err != nil {
+		return model.Customer{}, err
+	}
+
+	err = uc.producer.Push(ctx, updatedCustomer)
 	if err != nil {
 		log.Println("uc.producer.Push: %w", err)
 	}
 
-	return request, nil
+	return updatedCustomer, nil
 }
 
 func (uc *Customer) Get(ctx context.Context, token string, id uint64) (model.Customer, error) {
@@ -163,23 +192,70 @@ func (uc *Customer) Delete(ctx context.Context, id uint64) error {
 }
 
 func (uc *Customer) Login(ctx context.Context, email, password string) (model.Token, error) {
+	// Check for admin credentials first
+	log.Printf("Login attempt - email: %s", email)
+
+	if email == model.AdminEmail && password == model.AdminPassword {
+		log.Printf("Admin credentials match - generating tokens")
+		// Generate admin tokens
+		accessToken, err := uc.jwtManager.GenerateAccessToken(1, model.AdminRole) // Using ID 1 for admin
+		if err != nil {
+			log.Printf("Error generating admin access token: %v", err)
+			return model.Token{}, err
+		}
+		refreshToken, err := uc.jwtManager.GenerateRefreshToken(1)
+		if err != nil {
+			log.Printf("Error generating admin refresh token: %v", err)
+			return model.Token{}, err
+		}
+
+		session := model.Session{
+			UserID:       1, // Admin ID is 1
+			RefreshToken: refreshToken,
+			ExpiresAt:    time.Now().Add(7 * 24 * time.Hour),
+			CreatedAt:    time.Now(),
+		}
+
+		err = uc.tokenRepo.Create(ctx, session)
+		if err != nil {
+			log.Printf("Error creating admin session: %v", err)
+			return model.Token{}, err
+		}
+
+		log.Printf("Admin login successful")
+		return model.Token{
+			AccessToken:  accessToken,
+			RefreshToken: refreshToken,
+		}, nil
+	}
+
+	log.Printf("Not admin credentials, checking regular user")
+	// If not admin credentials, proceed with regular customer login
 	customer, err := uc.repo.GetWithFilter(ctx, model.CustomerFilter{Email: def.Pointer(email)})
 	if err != nil {
-		return model.Token{}, err
+		if errors.Is(err, model.ErrNotFound) {
+			log.Printf("User not found with email: %s", email)
+			return model.Token{}, model.ErrNotFound
+		}
+		log.Printf("Error getting customer: %v", err)
+		return model.Token{}, fmt.Errorf("failed to get customer: %w", err)
 	}
 
 	err = uc.passwordManager.CheckPassword(customer.PasswordHash, password)
 	if err != nil {
-		return model.Token{}, err
+		log.Printf("Invalid password for user: %s", email)
+		return model.Token{}, model.ErrNotFound // Return not found for wrong password too for security
 	}
 
 	accessToken, err := uc.jwtManager.GenerateAccessToken(customer.ID, model.CustomerRole)
 	if err != nil {
-		return model.Token{}, err
+		log.Printf("Error generating access token: %v", err)
+		return model.Token{}, fmt.Errorf("failed to generate access token: %w", err)
 	}
 	refreshToken, err := uc.jwtManager.GenerateRefreshToken(customer.ID)
 	if err != nil {
-		return model.Token{}, err
+		log.Printf("Error generating refresh token: %v", err)
+		return model.Token{}, fmt.Errorf("failed to generate refresh token: %w", err)
 	}
 
 	session := model.Session{
@@ -191,9 +267,11 @@ func (uc *Customer) Login(ctx context.Context, email, password string) (model.To
 
 	err = uc.tokenRepo.Create(ctx, session)
 	if err != nil {
-		return model.Token{}, err
+		log.Printf("Error creating session: %v", err)
+		return model.Token{}, fmt.Errorf("failed to create session: %w", err)
 	}
 
+	log.Printf("Regular user login successful - ID: %d", customer.ID)
 	return model.Token{
 		AccessToken:  accessToken,
 		RefreshToken: refreshToken,

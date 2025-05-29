@@ -5,9 +5,10 @@ go 1.23.0
 toolchain go1.23.5
 
 require (
-	github.com/AskatNa/apis-gen-user-service v1.0.4
+	github.com/AskatNa/apis-gen-user-service v1.0.6
 	github.com/caarlos0/env/v10 v10.0.0
 	github.com/golang-jwt/jwt/v5 v5.2.2
+	github.com/joho/godotenv v1.5.1
 	github.com/nats-io/nats.go v1.42.0
 	github.com/nats-io/nkeys v0.4.11
 	github.com/stretchr/testify v1.10.0
@@ -20,7 +21,6 @@ require (
 require (
 	github.com/davecgh/go-spew v1.1.1 // indirect
 	github.com/golang/snappy v0.0.4 // indirect
-	github.com/joho/godotenv v1.5.1 // indirect
 	github.com/klauspost/compress v1.18.0 // indirect
 	github.com/montanaflynn/stats v0.7.1 // indirect
 	github.com/nats-io/nuid v1.0.1 // indirect

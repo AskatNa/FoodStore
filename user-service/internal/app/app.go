@@ -35,9 +35,6 @@ func New(ctx context.Context, cfg *config.Config) (*App, error) {
 		return nil, fmt.Errorf("mongo: %w", err)
 	}
 
-	// mongo transactor
-	transactor := mongocon.NewTransactor(mongoDB.Client)
-
 	// nats client
 	log.Println("connecting to NATS", "hosts", strings.Join(cfg.Nats.Hosts, ","))
 	natsClient, err := natsconn.NewClient(ctx, cfg.Nats.Hosts, cfg.Nats.NKey, cfg.Nats.IsTest)
@@ -66,14 +63,16 @@ func New(ctx context.Context, cfg *config.Config) (*App, error) {
 	passwordManager := security.NewPasswordManager()
 
 	// UseCase
-	customerUsecase := usecase.NewCustomer(
-		aiRepo, customerRepo, tokenRepo, customerProducer, transactor.WithinTransaction, jwtManager, passwordManager,
+	customerUseCase := usecase.NewCustomer(
+		aiRepo, customerRepo, tokenRepo, customerProducer, nil, jwtManager, passwordManager,
 	)
+	adminUseCase := usecase.NewAdmin(customerRepo, jwtManager)
 
 	// gRPC server
 	gRPCServer := server.New(
 		cfg.Server.GRPCServer,
-		customerUsecase,
+		customerUseCase,
+		adminUseCase,
 	)
 
 	app := &App{

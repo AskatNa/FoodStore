@@ -1,5 +1,7 @@
 github.com/AskatNa/apis-gen-user-service v1.0.4 h1:WZlvQpm8uk+E2v4Do/BK3uZU8nV5d5DswkigdeWRGNw=
 github.com/AskatNa/apis-gen-user-service v1.0.4/go.mod h1:KXrf2Gj0Q+q5Iy+Z36WFPANU7Nt0LFMSUvoY1+vP4Zc=
+github.com/AskatNa/apis-gen-user-service v1.0.6 h1:PQlaCgKNuvQ6IoUunsihBDZH1K09H8/dd6MaXFQAZzE=
+github.com/AskatNa/apis-gen-user-service v1.0.6/go.mod h1:KXrf2Gj0Q+q5Iy+Z36WFPANU7Nt0LFMSUvoY1+vP4Zc=
 github.com/caarlos0/env/v10 v10.0.0 h1:yIHUBZGsyqCnpTkbjk8asUlx6RFhhEs+h7TOBdgdzXA=
 github.com/caarlos0/env/v10 v10.0.0/go.mod h1:ZfulV76NvVPw3tm591U4SwL3Xx9ldzBP9aGxzeN7G18=
 github.com/davecgh/go-spew v1.1.1 h1:vj9j/u1bqnvCEfJOwUhtlOARqs3+rkHYY13jYWTU97c=

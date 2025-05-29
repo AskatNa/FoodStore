@@ -1,6 +1,7 @@
 package dto
 
 import (
+	"fmt"
 	"github.com/AskatNa/FoodStore/user-service/internal/model"
 	base "github.com/AskatNa/apis-gen-user-service/base/frontend/v1"
 	svc "github.com/AskatNa/apis-gen-user-service/service/frontend/client/v1"
@@ -8,6 +9,10 @@ import (
 )
 
 func ToCustomerFromRegisterRequest(req *svc.RegisterRequest) (model.Customer, error) {
+	if req.Email == "" || req.Password == "" {
+		return model.Customer{}, fmt.Errorf("email and password are required for registration")
+	}
+
 	return model.Customer{
 		Email:       req.Email,
 		NewPassword: req.Password,
@@ -15,14 +20,27 @@ func ToCustomerFromRegisterRequest(req *svc.RegisterRequest) (model.Customer, er
 }
 
 func ToCustomerFromUpdateRequest(req *svc.UpdateRequest) (model.Customer, error) {
-	return model.Customer{
-		ID:              req.Id,
-		Name:            req.Name,
-		Phone:           req.Phone,
-		Email:           req.Email,
-		CurrentPassword: req.OldPassword,
-		NewPassword:     req.Password,
-	}, nil
+	customer := model.Customer{
+		ID: req.Id,
+	}
+
+	if req.Name != "" {
+		customer.Name = req.Name
+	}
+	if req.Phone != "" {
+		customer.Phone = req.Phone
+	}
+	if req.Email != "" {
+		customer.Email = req.Email
+	}
+	if req.Password != "" {
+		customer.NewPassword = req.Password
+	}
+	if req.OldPassword != "" {
+		customer.CurrentPassword = req.OldPassword
+	}
+
+	return customer, nil
 }
 
 func FromCustomer(client model.Customer) *base.Customer {

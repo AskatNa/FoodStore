@@ -2,13 +2,14 @@ package frontend
 
 import (
 	"context"
+	"errors"
 	"fmt"
 	"github.com/AskatNa/FoodStore/user-service/internal/adapter/gRPC/frontend/dto"
+	"github.com/AskatNa/FoodStore/user-service/internal/model"
 	"github.com/AskatNa/FoodStore/user-service/pkg/security"
+	svc "github.com/AskatNa/apis-gen-user-service/service/frontend/client/v1"
 	"google.golang.org/grpc/codes"
 	"google.golang.org/grpc/status"
-
-	svc "github.com/AskatNa/apis-gen-user-service/service/frontend/client/v1"
 )
 
 type Customer struct {
@@ -24,8 +25,6 @@ func NewCustomer(uc CustomerUseCase) *Customer {
 }
 
 func (c *Customer) Register(ctx context.Context, req *svc.RegisterRequest) (*svc.RegisterResponse, error) {
-	//TODO: validate request
-
 	customer, err := dto.ToCustomerFromRegisterRequest(req)
 	if err != nil {
 		return nil, status.Error(codes.InvalidArgument, err.Error())
@@ -33,15 +32,15 @@ func (c *Customer) Register(ctx context.Context, req *svc.RegisterRequest) (*svc
 
 	id, err := c.customerUseCase.Register(ctx, customer)
 	if err != nil {
-		return nil, dto.FromError(err)
+		return nil, status.Error(codes.Internal, err.Error())
 	}
 
-	return &svc.RegisterResponse{Id: id}, nil
+	return &svc.RegisterResponse{
+		Id: id,
+	}, nil
 }
 
 func (c *Customer) Update(ctx context.Context, req *svc.UpdateRequest) (*svc.UpdateResponse, error) {
-	//TODO: validate request
-
 	client, err := dto.ToCustomerFromUpdateRequest(req)
 	if err != nil {
 		return nil, status.Error(codes.InvalidArgument, err.Error())
@@ -89,6 +88,9 @@ func (c *Customer) Login(ctx context.Context, req *svc.LoginRequest) (*svc.Login
 
 	token, err := c.customerUseCase.Login(ctx, req.Email, req.Password)
 	if err != nil {
+		if errors.Is(err, model.ErrNotFound) {
+			return nil, status.Error(codes.NotFound, "user not found")
+		}
 		return nil, status.Error(codes.Internal, err.Error())
 	}
 
@@ -98,9 +100,7 @@ func (c *Customer) Login(ctx context.Context, req *svc.LoginRequest) (*svc.Login
 	}, nil
 }
 
-func (c *Customer) RefreshToken(
-	ctx context.Context, req *svc.RefreshTokenRequest,
-) (*svc.RefreshTokenResponse, error) {
+func (c *Customer) RefreshToken(ctx context.Context, req *svc.RefreshTokenRequest) (*svc.RefreshTokenResponse, error) {
 	if req.RefreshToken == "" {
 		return nil, status.Error(codes.InvalidArgument, "invalid refresh token")
 	}
@@ -114,4 +114,28 @@ func (c *Customer) RefreshToken(
 		AccessToken:  token.AccessToken,
 		RefreshToken: token.RefreshToken,
 	}, nil
+}
+
+func (c *Customer) Delete(ctx context.Context, req *svc.DeleteRequest) (*svc.DeleteResponse, error) {
+	if req.Id <= 0 {
+		return nil, status.Error(codes.InvalidArgument, fmt.Sprintf("wrong ID: %d", req.Id))
+	}
+
+	token, ok := security.TokenFromCtx(ctx)
+	if !ok {
+		return nil, status.Error(codes.Unauthenticated, "unauthenticated")
+	}
+
+	// First get the user to verify ownership (Get method already checks token and ownership)
+	_, err := c.customerUseCase.Get(ctx, token, req.Id)
+	if err != nil {
+		return nil, status.Error(codes.PermissionDenied, "you can only delete your own account")
+	}
+
+	err = c.customerUseCase.Delete(ctx, req.Id)
+	if err != nil {
+		return nil, status.Error(codes.Internal, err.Error())
+	}
+
+	return &svc.DeleteResponse{}, nil
 }

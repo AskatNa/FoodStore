@@ -3,6 +3,7 @@ package dao
 import (
 	"github.com/AskatNa/FoodStore/user-service/internal/model"
 	"go.mongodb.org/mongo-driver/bson"
+	"log"
 	"time"
 )
 
@@ -71,6 +72,7 @@ func FromCustomerFilter(filter model.CustomerFilter) bson.M {
 		query["isDeleted"] = *filter.IsDeleted
 	}
 
+	log.Printf("MongoDB: Generated filter query: %+v", query)
 	return query
 }
 
@@ -97,5 +99,10 @@ func FromCustomerUpdateData(updateData model.CustomerUpdateData) bson.M {
 		query["isDeleted"] = *updateData.IsDeleted
 	}
 
+	if updateData.UpdatedAt != nil {
+		query["updatedAt"] = *updateData.UpdatedAt
+	}
+
+	log.Printf("MongoDB: Generated update query: %+v", query)
 	return bson.M{"$set": query}
 }

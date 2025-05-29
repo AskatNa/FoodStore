@@ -3,7 +3,9 @@ package model
 import "time"
 
 const (
-	CustomerRole = "customer"
+	//CustomerRole = "customer"
+	//AdminRole    = "admin"
+	OwnerRole = "owner"
 )
 
 type Customer struct {
@@ -14,6 +16,7 @@ type Customer struct {
 	CurrentPassword string
 	NewPassword     string
 	PasswordHash    string
+	Role            string
 	CreatedAt       time.Time
 	UpdatedAt       time.Time
 
@@ -26,6 +29,7 @@ type CustomerFilter struct {
 	Phone        *string
 	Email        *string
 	PasswordHash *string
+	Role         *string
 
 	IsDeleted *bool
 }
@@ -36,6 +40,7 @@ type CustomerUpdateData struct {
 	Phone        *string
 	Email        *string
 	PasswordHash *string
+	Role         *string
 	UpdatedAt    *time.Time
 	IsDeleted    *bool
 }

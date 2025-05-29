@@ -13,3 +13,10 @@ type CustomerUseCase interface {
 	Login(ctx context.Context, email, password string) (model.Token, error)
 	RefreshToken(ctx context.Context, refreshToken string) (model.Token, error)
 }
+
+type AdminUseCase interface {
+	GetCustomerByEmail(ctx context.Context, token string, email string) (model.Customer, error)
+	UpdateCustomer(ctx context.Context, token string, email string, updates model.CustomerUpdateData) (model.Customer, error)
+	DeleteCustomer(ctx context.Context, token string, email string) error
+	ListCustomers(ctx context.Context, token string, filter model.CustomerFilter, pageSize, pageNumber int32) ([]model.Customer, int32, error)
+}

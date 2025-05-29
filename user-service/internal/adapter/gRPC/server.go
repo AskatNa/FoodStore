@@ -12,6 +12,7 @@ import (
 	"google.golang.org/grpc"
 	"google.golang.org/grpc/reflection"
 
+	adminsvc "github.com/AskatNa/apis-gen-user-service/service/frontend/admin/v1"
 	frontendsvc "github.com/AskatNa/apis-gen-user-service/service/frontend/client/v1"
 )
 
@@ -19,17 +20,20 @@ type API struct {
 	s               *grpc.Server
 	cfg             config.GRPCServer
 	addr            string
-	customerUsecase CustomerUseCase
+	customerUseCase CustomerUseCase
+	adminUseCase    AdminUseCase
 }
 
 func New(
 	cfg config.GRPCServer,
 	customerUseCase CustomerUseCase,
+	adminUseCase AdminUseCase,
 ) *API {
 	return &API{
 		cfg:             cfg,
 		addr:            fmt.Sprintf("0.0.0.0:%d", cfg.Port),
-		customerUsecase: customerUseCase,
+		customerUseCase: customerUseCase,
+		adminUseCase:    adminUseCase,
 	}
 }
 
@@ -70,8 +74,9 @@ func (a *API) Stop(ctx context.Context) error {
 func (a *API) run(ctx context.Context) error {
 	a.s = grpc.NewServer(a.setOptions(ctx)...)
 
-	// Register bo services
-	frontendsvc.RegisterCustomerServiceServer(a.s, frontend.NewCustomer(a.customerUsecase))
+	// Register services
+	frontendsvc.RegisterCustomerServiceServer(a.s, frontend.NewCustomer(a.customerUseCase))
+	adminsvc.RegisterAdminServiceServer(a.s, frontend.NewAdmin(a.adminUseCase))
 
 	// Register reflection service
 	reflection.Register(a.s)
