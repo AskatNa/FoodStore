@@ -15,7 +15,7 @@ type CustomerUseCase interface {
 }
 
 type AdminUseCase interface {
-	GetCustomerByEmail(ctx context.Context, token string, email string) (model.Customer, error)
+	GetCustomerByEmail(ctx context.Context, token, email string) (model.Customer, error)
 	UpdateCustomer(ctx context.Context, token string, email string, updates model.CustomerUpdateData) (model.Customer, error)
 	DeleteCustomer(ctx context.Context, token string, email string) error
 	ListCustomers(ctx context.Context, token string, filter model.CustomerFilter, pageSize, pageNumber int32) ([]model.Customer, int32, error)

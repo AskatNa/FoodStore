@@ -54,3 +54,16 @@ func FromCustomer(client model.Customer) *base.Customer {
 		IsDeleted: client.IsDeleted,
 	}
 }
+
+// FromCustomerAdmin converts model.Customer to base.Customer for admin responses
+func FromCustomerAdmin(customer model.Customer) *base.Customer {
+	return &base.Customer{
+		Id:        customer.ID,
+		Name:      customer.Name,
+		Email:     customer.Email,
+		Phone:     customer.Phone,
+		CreatedAt: timestamppb.New(customer.CreatedAt),
+		UpdatedAt: timestamppb.New(customer.UpdatedAt),
+		IsDeleted: customer.IsDeleted,
+	}
+}

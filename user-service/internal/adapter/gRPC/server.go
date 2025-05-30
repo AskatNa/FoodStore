@@ -70,7 +70,6 @@ func (a *API) Stop(ctx context.Context) error {
 	return nil
 }
 
-// run starts and runs GRPCServer server.
 func (a *API) run(ctx context.Context) error {
 	a.s = grpc.NewServer(a.setOptions(ctx)...)
 
