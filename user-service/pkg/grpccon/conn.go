@@ -8,7 +8,6 @@ import (
 	"google.golang.org/grpc/credentials/insecure"
 	"google.golang.org/grpc/keepalive"
 )
-
 const (
 	MaxRecvMsgSize = 24 * 1024 * 1024 // 24 MB
 	timeKeepalive  = 10 * time.Second
