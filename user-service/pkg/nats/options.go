@@ -9,7 +9,6 @@ import (
 	"github.com/nats-io/nats.go"
 	"github.com/nats-io/nkeys"
 )
-
 // Nats jetstream settings.
 const (
 	maxWaitFetch = 3 * time.Second

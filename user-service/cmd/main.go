@@ -6,11 +6,9 @@ import (
 	"github.com/AskatNa/FoodStore/user-service/internal/app"
 	"log"
 )
-
 func main() {
 	ctx := context.Background()
 	// TODO: add telemetry here when the topic of logging will be covered
-
 	// Parse config
 	cfg, err := config.New()
 	if err != nil {

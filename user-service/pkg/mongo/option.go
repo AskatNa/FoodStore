@@ -11,6 +11,5 @@ func (m Config) genConnectURL() string {
 	} else {
 		url = fmt.Sprintf("mongodb://%s:%s@%s/?tls=%t&retryWrites=false", m.Username, m.Password, m.URI, m.TLSEnable)
 	}
-
 	return url
 }

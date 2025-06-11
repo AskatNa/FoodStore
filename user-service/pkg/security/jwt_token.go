@@ -9,7 +9,6 @@ import (
 type JWTManager struct {
 	secretKey string
 }
-
 func NewJWTManager(secretKey string) *JWTManager {
 	return &JWTManager{secretKey: secretKey}
 }

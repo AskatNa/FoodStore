@@ -10,7 +10,6 @@ import (
 type Transactor struct {
 	dbClient *mongo.Client
 }
-
 func NewTransactor(dbClient *mongo.Client) *Transactor {
 	return &Transactor{
 		dbClient: dbClient,

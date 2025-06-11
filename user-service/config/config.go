@@ -6,7 +6,6 @@ import (
 	"github.com/joho/godotenv"
 	"time"
 )
-
 type (
 	Config struct {
 		Mongo      mongo.Config

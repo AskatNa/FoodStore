@@ -12,7 +12,6 @@ type MsgHandler func(msg *nats.Msg) error
 type Client struct {
 	Conn *nats.Conn
 }
-
 func NewClient(ctx context.Context, hosts []string, nkey string, isTest bool) (*Client, error) {
 
 	opts, err := setOptions(ctx, hosts, nkey, isTest)

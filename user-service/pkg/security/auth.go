@@ -5,7 +5,6 @@ import (
 	"google.golang.org/grpc/metadata"
 	"strings"
 )
-
 func TokenFromCtx(ctx context.Context) (string, bool) {
 	md, ok := metadata.FromIncomingContext(ctx)
 	if !ok {
