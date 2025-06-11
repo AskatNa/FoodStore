@@ -2,6 +2,7 @@ package auth
 
 import (
 	"github.com/golang-jwt/jwt/v5"
+	"strconv"
 	"time"
 )
 
@@ -13,9 +14,9 @@ type Claims struct {
 	jwt.RegisteredClaims
 }
 
-func GenerateToken(userID, role string) (string, error) {
+func GenerateToken(userID uint64, role string) (string, error) {
 	claims := &Claims{
-		UserID: userID,
+		UserID: strconv.FormatUint(userID, 10),
 		Role:   role,
 		RegisteredClaims: jwt.RegisteredClaims{
 			ExpiresAt: jwt.NewNumericDate(time.Now().Add(24 * time.Hour)),

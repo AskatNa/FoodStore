@@ -2,10 +2,8 @@ package main
 
 import (
 	"apigateway/internal/handler"
-
-	menuPB "apigateway/proto/menu"
 	orderPB "apigateway/proto/order"
-	userPB "apigateway/proto/user"
+	svc "github.com/AskatNa/apis-gen-user-service/service/frontend/client/v1"
 	"github.com/gin-contrib/cors"
 	"github.com/gin-gonic/gin"
 	"log"
@@ -24,11 +22,8 @@ func main() {
 		ExposeHeaders:    []string{"Content-Length"},
 		AllowCredentials: true,
 	}))
-	menuConn, err := grpc.Dial("localhost:50051", grpc.WithInsecure())
-	if err != nil {
-		log.Fatalf("Failed to connect to MenuService: %v", err)
-	}
-	orderConn, err := grpc.Dial("localhost:50053", grpc.WithInsecure())
+
+	orderConn, err := grpc.Dial("localhost:9999", grpc.WithInsecure())
 	if err != nil {
 		log.Fatalf("Failed to connect to OrderService: %v", err)
 	}
@@ -37,13 +32,11 @@ func main() {
 		log.Fatalf("Failed to connect to UserService: %v", err)
 	}
 
-	menuClient := menuPB.NewMenuServiceClient(menuConn)
 	orderClient := orderPB.NewOrderServiceClient(orderConn)
-	userClient := userPB.NewUserServiceClient(userConn)
+	customerClient := svc.NewCustomerServiceClient(userConn)
 
-	handler.InitMenuRoutes(r, menuClient)
 	handler.InitOrderRoutes(r, orderClient)
-	handler.InitUserRoutes(r, userClient)
+	handler.InitUserRoutes(r, customerClient)
 
 	log.Println("API Gateway started on :8080")
 	if err := http.ListenAndServe(":8080", r); err != nil {
