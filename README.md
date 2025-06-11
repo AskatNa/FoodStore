@@ -1,0 +1,1 @@
+I wanted to say, that I forgot to merge my feature/auth-user branch to master where I have user-service. I have a User_service in master even tho, I had created it for temporarly usage. In the defence I had demonstrated my feature/auth-user branch 
